@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+    api_redis:
+        image: redis:latest
+        ports:
+        - "6379:6379"
+        volumes:
+        - ./redis:/data
+
+    api_api:
+        image: api:latest
+        command: pipenv run uvicorn api:app --host 0.0.0.0 --port 5057 --reload
+        volumes:
+        - .:/app
+        ports:
+        - "5057:5057"
+        depends_on:
+        - api_redis
+
+    api_worker:
+        image: api:latest
+        command: pipenv run rq worker --url redis://api_redis:6379 my_queue
+        depends_on:
+        - api_redis
